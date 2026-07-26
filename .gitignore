@@ -9,3 +9,7 @@ data/*-raw-cv-data.docx
 
 # Rendered outputs (PDFs, HTMLs)
 output/
+
+# Backup directories (created by git-filter-repo, kept locally only)
+.git.backup.*
+.git.before-*
