@@ -22,6 +22,14 @@ jobs:
 
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v2
+        with:
+          # Scan all commits in the repo, not just the range between
+          # the previous and current head. Required after a force-push
+          # that rewrites history (the previous head may be an orphan
+          # or root commit with no parent, breaking the default
+          # `git log <prev>^..<new> --first-parent` invocation).
+          # Slightly slower but more robust.
+          log-opts: '--all'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Upload SARIF report for GitHub Code Scanning alerts
