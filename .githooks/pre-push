@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Pre-push hook: block push if secrets are detected in the staged or working tree.
+# Install: git config core.hooksPath .githooks
+# Or run: make install-hooks (if a target exists; otherwise set manually)
+#
+# This hook runs git-leaks protect on every push. If gitleaks is not in PATH,
+# it warns and continues (so it doesn't break setups without gitleaks installed).
+set -uo pipefail
+
+# Ensure common binary locations are in PATH (gitleaks usually in ~/bin/)
+export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "⚠️  gitleaks not found in PATH — skipping pre-push scan."
+  echo "   Install: see ~/.agents/skills/workspace-tooling/SKILL.md"
+  echo "   Or: https://github.com/gitleaks/gitleaks/releases"
+  exit 0
+fi
+
+echo "🔍 Running gitleaks scan before push..."
+
+# Scan working tree (uncommitted + tracked)
+if ! gitleaks protect --staged --redact --no-banner; then
+  echo ""
+  echo "❌ Push blocked: gitleaks found secrets."
+  echo "   Review the output above. If a finding is a false positive,"
+  echo "   add a 'gitleaks:allow' comment on the same line in source."
+  echo ""
+  echo "   To bypass (NOT recommended): git push --no-verify"
+  exit 1
+fi
+
+echo "✅ gitleaks clean — proceeding with push."
+exit 0

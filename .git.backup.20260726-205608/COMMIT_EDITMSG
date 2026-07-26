@@ -1,0 +1,18 @@
+docs: remove deprecated doc/capabilities.md, update doc pointers
+
+doc/capabilities.md was redundant with AGENTS.md and README.md (both
+already cover the necessary guidance for AI agents and users) and
+referenced outdated naming/paths. The canonical capability source is
+openspec/specs/ which remains untouched.
+
+Changes:
+- DELETE doc/capabilities.md
+- README.md: replace capabilities.md row with openspec/specs/ pointer
+- AGENTS.md: remove capabilities.md from repo map
+- PLAN.md: mark all 14 steps [DONE]/[REVERSED], add Final Status section
+  declaring plan completed. This removes the plan from the plannotator
+  tasklist (auto-cleanup when all steps done)
+
+Step 11 (aggiorna capabilities.md) is REVERSED to 'delete it' per user
+decision. The originally planned 'fix paths + add stato attuale' was
+deemed unnecessary because the file was redundant with other docs.

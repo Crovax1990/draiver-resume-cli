@@ -1,0 +1,11 @@
+node_modules/
+.env
+
+# User's personal data (not tracked)
+data/
+
+# Raw DOCX sources (not part of pipeline, kept locally for reference only)
+data/*-raw-cv-data.docx
+
+# Rendered outputs (PDFs, HTMLs)
+output/

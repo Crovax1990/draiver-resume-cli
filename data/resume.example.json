@@ -1,0 +1,134 @@
+{
+  "basics": {
+    "name": "Your Name",
+    "label": "Your Professional Title",
+    "image": "",
+    "email": "your.email@example.com",
+    "phone": "+00 000 000 0000",
+    "url": "https://your-website.com",
+    "summary": "A brief professional summary describing your experience, expertise, and career goals.",
+    "location": {
+      "address": "",
+      "postalCode": "00000",
+      "city": "Your City",
+      "countryCode": "XX",
+      "region": "Your Region"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "your-profile",
+        "url": "https://linkedin.com/in/your-profile"
+      },
+      {
+        "network": "GitHub",
+        "username": "your-username",
+        "url": "https://github.com/your-username"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Company Name",
+      "position": "Your Position",
+      "url": "https://company.com",
+      "startDate": "2020-01",
+      "endDate": "Present",
+      "summary": "Description of your role, responsibilities, and key achievements.",
+      "highlights": [
+        "Led a team to deliver a major project on time and under budget",
+        "Designed and implemented a scalable microservices architecture",
+        "Reduced system downtime by 40% through infrastructure improvements"
+      ]
+    },
+    {
+      "name": "Previous Company",
+      "position": "Previous Position",
+      "url": "https://previous-company.com",
+      "startDate": "2017-03",
+      "endDate": "2019-12",
+      "summary": "Description of your role and contributions.",
+      "highlights": [
+        "Developed and maintained RESTful APIs serving 100K+ daily requests",
+        "Collaborated with cross-functional teams to define product requirements"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University Name",
+      "url": "https://university.edu",
+      "area": "Field of Study",
+      "studyType": "Degree Type",
+      "startDate": "2013-09",
+      "endDate": "2017-06",
+      "score": "3.8"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Programming Languages",
+      "level": "Expert",
+      "keywords": ["JavaScript", "TypeScript", "Python", "Java"]
+    },
+    {
+      "name": "Frameworks & Libraries",
+      "level": "Advanced",
+      "keywords": ["React", "Node.js", "Spring Boot", "Express"]
+    },
+    {
+      "name": "DevOps & Cloud",
+      "level": "Intermediate",
+      "keywords": ["Docker", "Kubernetes", "AWS", "CI/CD"]
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "Native"
+    },
+    {
+      "language": "Italian",
+      "fluency": "Intermediate"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Open Source Project",
+      "description": "A brief description of the project, its purpose, and your contribution.",
+      "highlights": [
+        "Implemented core features used by 500+ developers",
+        "Reduced build times by 60% through optimization"
+      ],
+      "keywords": ["React", "Node.js", "TypeScript"],
+      "startDate": "2023-01",
+      "endDate": "2023-06",
+      "url": "https://github.com/your-username/project",
+      "roles": ["Maintainer"],
+      "type": "openSource"
+    }
+  ],
+  "interests": [
+    {
+      "name": "Technology",
+      "keywords": ["Open Source", "Cloud Computing", "AI/ML"]
+    },
+    {
+      "name": "Activities",
+      "keywords": ["Hiking", "Photography", "Reading"]
+    }
+  ],
+  "meta": {
+    "theme": {
+      "sectionOrder": [
+        "basics", "skills", "work", "projects", "certificates",
+        "references", "education", "languages", "interests"
+      ],
+      "backgroundAltColor": "#f5f2ed",
+      "keywordTextColor": "#1e3a52"
+    },
+    "language": "en",
+    "version": "v1.0.0",
+    "themePackage": "jsonresume-theme-stackoverflow"
+  }
+}

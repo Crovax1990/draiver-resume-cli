@@ -1,0 +1,17 @@
+{
+  "name": "draiver-resume-cli",
+  "version": "2.0.0",
+  "description": "Automated resume-as-code pipeline with translation and rendering",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "translate": "node scripts/translate.cjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "jsonresume-theme-stackoverflow": "^3.3.0",
+    "openai": "^4.91.0",
+    "puppeteer": "^24.43.1",
+    "resumed": "^6.1.0"
+  }
+}
