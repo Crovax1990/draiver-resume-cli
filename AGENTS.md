@@ -167,6 +167,82 @@ Il Makefile continua a funzionare (usa `npx $(RESUMED)`).
 - [doc/resume-schema.json](doc/resume-schema.json) — schema JSON Resume locale
 - [package.json](package.json) — dipendenze
 - [Makefile](Makefile) — sorgente Makefile
+- [CHANGELOG.md](CHANGELOG.md) — **gitignored**, storico modifiche CV (vedi sezione dedicata)
+
+## Workflow CHANGELOG.md per modifiche CV
+
+Ogni modifica al CV (in `data/martina-peracchini.json`, `data/luca-gobbi.json`,
+`data/luca-gobbi.en.json`, o altri CV futuri in `data/`) **deve** essere registrata in
+`CHANGELOG.md` alla radice del repo.
+
+### Perché un changelog dedicato (e non il git log)
+
+- I file in `data/` sono **gitignored** per privacy → `git log` non li traccia
+- Abbiamo bisogno di uno storico strutturato per ricostruire l'evoluzione del CV
+- Lo standard di riferimento per i changelog è [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) v1.1.0
+
+### Formato di una riga
+
+Ogni modifica produce **una sola riga** in `CHANGELOG.md`:
+
+```
+- <scope>: <descrizione sintetica>
+```
+
+- **scope** = path JSON in dot notation (es. `basics.email`, `publications[0]`, `work[3]`)
+- **descrizione** = cosa è cambiato, ~120 caratteri max, no gergo
+
+Se la modifica è troppo complessa (es. riscrittura completa di un work entry), si usa
+un multi-linea con sub-bullet o si rimanda al diff git.
+
+### Categorie (Conventional Commits-style)
+
+- **Added**: nuovo campo, entry, file
+- **Changed**: modifica a campo esistente
+- **Removed**: campo o entry eliminato/a
+- **Fixed**: bug fix (URL errato, formattazione rotta)
+
+### Date e ordering
+
+- Sezione più recente **in cima** (ordine discendente)
+- Date in formato **ISO 8601** (`YYYY-MM-DD`)
+- Modifiche multiple nello stesso giorno e stesso scope: **aggregare in un'unica riga**
+
+### Quando aggiungere una riga
+
+- ✅ Modifica di un campo esistente (rinominato, URL fixato, valore cambiato)
+- ✅ Aggiunta/rimozione di un campo, una entry, un'evidenza
+- ✅ Riordino di array
+- ✅ Aggiornamento di keywords, highlights, descriptions
+- ❌ Modifiche a `data/resume.example.json` (template tracciato, non è un CV reale)
+- ❌ Modifiche a `doc/resume-schema.json` (è lo schema stesso, non un dato)
+- ❌ Modifiche al solo rendering (template, Makefile) senza cambio nei dati CV
+
+### Commit message per le modifiche CV
+
+Usa [Conventional Commits](https://www.conventionalcommits.org/) con scope dedicato:
+
+```
+fix(cv-martina): PEC email moved to basics.email for icon visibility
+feat(cv-luca): add draiver-resume-cli project
+refactor(cv-martina): unify 3 Santo Spirito entries into 1
+docs(cv-changelog): add CHANGELOG.md workflow section
+```
+
+Scope consigliati:
+- `cv-martina` per modifiche a `data/martina-peracchini.json`
+- `cv-luca` per modifiche a `data/luca-gobbi.json` e `data/luca-gobbi.en.json`
+- `cv-changelog` per modifiche a `CHANGELOG.md` stesso
+
+### Privacy: perché `CHANGELOG.md` è gitignored
+
+`CHANGELOG.md` è **gitignored** (riga in `.gitignore`). Anche se non contiene PII
+dirette (nome, email, telefono), descrive la **struttura** del CV in modo granulare,
+rendendo possibile la ricostruzione automatica del profilo professionale. Meglio
+tenerlo locale.
+
+Il file vive come storico di lavoro per l'utente e l'agente che modifica i CV, ma non
+viene versionato nel repo pubblico.
 
 ## Pre-push hook (gitleaks)
 
