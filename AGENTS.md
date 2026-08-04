@@ -88,6 +88,16 @@ make pdf CV=<stem>
 ```
 Poi ispeziona visivamente il PDF (`output/<stem>.pdf`) — il validatore non becca problemi di layout.
 
+## Validazione qualitativa CV (skill `cv-quality-check`)
+
+Skill di progetto in `.opencode/skills/cv-quality-check/SKILL.md` (indipendente da OpenSpec: non è una capability della pipeline, si invoca solo su richiesta).
+
+- **Invocazione**: chiedi all'agente "valida la qualità del CV `<stem>` con la skill cv-quality-check" (input: `data/<stem>.json`)
+- **Cosa verifica** (rubric "Dove sono le prove?"): P1 affermazioni generiche senza supporto, P2 ogni qualità provata da un'esperienza concreta, P3 risultati misurabili (numeri, obiettivi, miglioramenti), P4 contesto (scala azienda/sistema, complessità), P5 soft skill dimostrate con esempi, P6 self-check finale
+- **Output**: report violazioni per scope dot-notation con severità `critical` / `minor` / `info` — la skill NON modifica i file CV
+- **Quando usarla**: dopo modifiche al contenuto di un CV, prima di una candidatura, o per raccogliere le metriche mancanti (le evidenze mancanti sono elencate come domande da rispondere con dati reali, non vengono inventate)
+- **Complementare a**: `make validate` (solo schema JSON) e ispezione visiva del PDF (solo layout)
+
 ## Gotchas noti (leggere prima di toccare codice)
 
 ### 1. `resumed validate` ha un bug su JSON invalidi
@@ -168,6 +178,7 @@ Il Makefile continua a funzionare (usa `npx $(RESUMED)`).
 - [package.json](package.json) — dipendenze
 - [Makefile](Makefile) — sorgente Makefile
 - [CHANGELOG.md](CHANGELOG.md) — **gitignored**, storico modifiche CV (vedi sezione dedicata)
+- [.opencode/skills/cv-quality-check/SKILL.md](.opencode/skills/cv-quality-check/SKILL.md) — skill di validazione qualitativa CV (rubric "Dove sono le prove?")
 
 ## Workflow CHANGELOG.md per modifiche CV
 
