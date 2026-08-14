@@ -7,6 +7,9 @@ data/
 # Raw DOCX sources (not part of pipeline, kept locally for reference only)
 data/*-raw-cv-data.docx
 
+# Raw source notes (confidential project material, kept locally for reference only)
+raw/
+
 # Rendered outputs (PDFs, HTMLs)
 output/
 
