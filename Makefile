@@ -19,9 +19,14 @@
 
 OUTPUT_DIR  := output
 DATA_DIR    := data
-THEME       ?= jsonresume-theme-stackoverflow
+# THEME: package npm del tema OPPURE path (assoluto) di un wrapper locale.
+# Default: wrapper locale che fixa il wrapping delle keyword della sezione SKILLS
+# del tema stackoverflow (bug upstream v3.3.0). Vedi doc/skills-rendering.md.
+THEME       ?= $(CURDIR)/themes/stackoverflow-fix.js
 RESUMED     ?= resumed
 KEEP_HTML   ?= 0
+# Luogo stampato nel footer del CV (data = ultima modifica del JSON, automatica)
+CV_PLACE    ?= Firenze
 # Default CV = primo scoperto, fallback se discovery vuota
 CV          ?= $(shell ls $(DATA_DIR)/*.json 2>/dev/null \
                  | grep -v '\.en\.json$$' \
@@ -44,7 +49,8 @@ ALL_CVS := $(shell ls $(DATA_DIR)/*.json 2>/dev/null \
             | xargs -I{} basename {} .json)
 
 .PHONY: build pdf pdf-all html html-all validate validate-all \
-        translate translate-all list clean clean-all help debug
+        translate translate-all list clean clean-all help debug \
+        snapshot snapshots rollback
 
 # ─── Default ────────────────────────────────────────────────────────────────
 build: pdf-all
@@ -67,6 +73,7 @@ pdf: output
 		$(MAKE) list; \
 		exit 1; \
 	fi
+	@$(MAKE) snapshot CV=$(CV)
 	@echo "=== [$(CV)] IT ==="
 	$(MAKE) one-pdf SOURCE=$(DATA_DIR)/$(CV).json
 	@if [ -f $(DATA_DIR)/$(CV).en.json ]; then \
@@ -77,12 +84,13 @@ pdf: output
 	fi
 	@echo ""
 	@echo "=== Output in $(OUTPUT_DIR)/ ==="
-	@ls -lh $(OUTPUT_DIR)/$(CV).pdf $(OUTPUT_DIR)/$(CV).en.pdf 2>/dev/null || true
+	@ls -lh $(OUTPUT_DIR)/$(CV)-*.pdf 2>/dev/null || true
 
 html: output
 	@if [ ! -f $(DATA_DIR)/$(CV).json ]; then \
 		echo "ERROR: $(DATA_DIR)/$(CV).json non esiste"; exit 1; \
 	fi
+	@$(MAKE) snapshot CV=$(CV)
 	@echo "=== [$(CV)] IT (HTML) ==="
 	$(MAKE) one-html SOURCE=$(DATA_DIR)/$(CV).json
 	@if [ -f $(DATA_DIR)/$(CV).en.json ]; then \
@@ -148,10 +156,14 @@ translate-all-local:
 # ─── Low-level (chiamati da pdf/html) ──────────────────────────────────────
 
 # one-pdf: render → export PDF → cleanup HTML
+# Il PDF prende la data di ultima modifica del JSON (<base>-<YYYY-MM-DD>.pdf),
+# la stessa stampata nel footer via CV_FOOTER: nome file e contenuto coincidono.
 one-pdf:
 	@base=$$(basename $(SOURCE) .json); \
+	stamp=$$(date -r $(SOURCE) +%Y-%m-%d); \
 	html="$(OUTPUT_DIR)/$$base.html"; \
-	pdf="$(OUTPUT_DIR)/$$base.pdf"; \
+	pdf="$(OUTPUT_DIR)/$$base-$$stamp.pdf"; \
+	export CV_FOOTER="$(CV_PLACE), $$stamp"; \
 	echo "Render:  $$html"; \
 	npx $(RESUMED) render $(SOURCE) -t $(THEME) -o $$html && \
 	echo "Export:  $$pdf"; \
@@ -168,7 +180,57 @@ one-html:
 	@base=$$(basename $(SOURCE) .json); \
 	html="$(OUTPUT_DIR)/$$base.html"; \
 	echo "Render:  $$html"; \
+	export CV_FOOTER="$(CV_PLACE), $$(date -r $(SOURCE) +%Y-%m-%d)"; \
 	npx $(RESUMED) render $(SOURCE) -t $(THEME) -o $$html
+
+# ─── Snapshot & rollback (versionamento locale dei JSON, fuori git) ──────────
+# I JSON in data/ sono gitignored (privacy) ma ogni cambio va storicizzato per
+# il rollback: `snapshot` salva una copia solo se il contenuto è cambiato
+# dall'ultimo snapshot (IT + EN). `pdf` e `html` lo invocano in automatico,
+# quindi ogni punto di modifica/validazione è coperto senza disciplina manuale.
+
+SNAP_DIR  := .snapshots
+SNAP_KEEP ?= 20
+
+snapshot:
+	@mkdir -p $(SNAP_DIR); \
+	for f in $(DATA_DIR)/$(CV).json $(DATA_DIR)/$(CV).en.json; do \
+		if [ ! -f $$f ]; then continue; fi; \
+		stem=$$(basename $$f .json); \
+		latest=$$(ls -t $(SNAP_DIR)/$$stem-*.json 2>/dev/null | head -1); \
+		cur=$$(sha256sum $$f | cut -d' ' -f1); \
+		if [ -n "$$latest" ] && [ "$$cur" = "$$(sha256sum $$latest | cut -d' ' -f1)" ]; then \
+			echo "(snapshot: nessun cambio in $$f)"; \
+		else \
+			snap=$(SNAP_DIR)/$$stem-$$(date +%Y%m%d-%H%M%S-%N).json; \
+			cp $$f $$snap; \
+			echo "Snapshot: $$snap"; \
+			old=$$(ls -t $(SNAP_DIR)/$$stem-*.json 2>/dev/null | tail -n +$$(( $(SNAP_KEEP) + 1 ))); \
+			if [ -n "$$old" ]; then echo "$$old" | xargs -r rm -f; echo "(pulizia: tenuti ultimi $(SNAP_KEEP) per $$stem)"; fi; \
+		fi; \
+	done
+
+snapshots:
+	@files=$$(ls -t $(SNAP_DIR)/$(CV)-*.json $(SNAP_DIR)/$(CV).en-*.json 2>/dev/null); \
+	if [ -z "$$files" ]; then echo "(nessuno snapshot per $(CV))"; else echo "$$files" | while read f; do ls -l $$f; done; fi
+
+# rollback: salva prima lo stato corrente (mai perdere il dirty), poi annulla
+# l'ultima modifica ripristinando il penultimo snapshot (o SNAP=<file> esplicito)
+# + rivalida + rigenera. Un secondo rollback di fila rifà (redo).
+rollback:
+	@$(MAKE) snapshot CV=$(CV)
+	@if [ -n "$(SNAP)" ]; then \
+		cp $(SNAP) $(DATA_DIR)/$(CV).json; \
+		echo "Ripristinato $(DATA_DIR)/$(CV).json da $(SNAP)"; \
+	else \
+		prev=$$(ls -t $(SNAP_DIR)/$(CV)-*.json 2>/dev/null | head -2 | tail -1); \
+		n=$$(ls $(SNAP_DIR)/$(CV)-*.json 2>/dev/null | wc -l); \
+		if [ "$$n" -lt 2 ]; then echo "ERROR: niente da annullare per $(CV) (un solo snapshot)"; exit 1; fi; \
+		cp $$prev $(DATA_DIR)/$(CV).json; \
+		echo "Annullata ultima modifica di $(DATA_DIR)/$(CV).json (da $$prev)"; \
+	fi
+	@$(MAKE) validate CV=$(CV)
+	@$(MAKE) pdf CV=$(CV)
 
 # ─── Debug & utilities ─────────────────────────────────────────────────────
 

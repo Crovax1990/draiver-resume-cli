@@ -23,9 +23,13 @@ draiver-resume-cli/
 │   ├── firstname-lastname.translateme.json # (gitignored, generato da --extract)
 │   └── martina-peracchini.json    # CV Martina
 ├── output/                        # PDF/HTML generati (gitignored)
+├── .snapshots/                    # storico versionato dei JSON (gitignored, rollback)
+├── themes/stackoverflow-fix.js    # wrapper tema: fix wrapping keyword SKILLS
 ├── scripts/translate.cjs          # traduzione IT→EN multi-CV
 ├── doc/
 │   ├── pdf-generation.md          # dettagli rendering
+│   ├── skills-rendering.md        # fix overlap colonne SKILLS
+│   ├── theme-research.md          # discovery temi/engine 2026-10-06
 │   └── resume-schema.json         # schema JSON Resume locale
 ├── openspec/                      # snapshot storici delle change (NON toccare)
 ├── Makefile                       # orchestratore: build, pdf, validate, translate
@@ -37,7 +41,7 @@ draiver-resume-cli/
 ### Naming file
 - **NO suffisso `-cv`**: i file sono `data/<stem>.json`, MAI `data/<stem>-cv.json`
 - Stem = `<first>-<last>` per CV personali, `<ruolo>` per CV generici
-- File generati (gitignored): `<stem>.en.json`, `<stem>.translateme.json`, `output/<stem>.pdf`, `output/<stem>.en.pdf`
+- File generati (gitignored): `<stem>.en.json`, `<stem>.translateme.json`, `output/<stem>-<YYYY-MM-DD>.pdf`, `output/<stem>.en-<YYYY-MM-DD>.pdf` (data = ultima modifica JSON)
 
 ### `meta` standard obbligatorio in ogni JSON CV
 
@@ -80,12 +84,19 @@ Se aggiungi un file in `data/`, viene pickato automaticamente. Se aggiungi un fi
 | Pulire artefatti | `make clean` |
 | Pulire tutto + dipendenze | `make clean-all` |
 | Rigenerare e ispezionare HTML | `KEEP_HTML=1 make pdf CV=<stem>` oppure `make debug` |
+| Storico snapshot del JSON | `make snapshots CV=<stem>` |
+| Annullare ultima modifica JSON | `make rollback CV=<stem>` (o `SNAP=<file>`) |
 
 **Dopo OGNI modifica a un JSON**, esegui in sequenza:
 ```bash
 make validate CV=<stem>
 make pdf CV=<stem>
 ```
+`make pdf` (e `make html`) storicizzano in automatico il JSON in `.snapshots/`
+(solo se cambiato dall'ultimo snapshot) — i JSON sono gitignored ma il rollback
+è garantito: `make snapshots CV=<stem>` lista, `make rollback CV=<stem>` annulla
+l'ultima modifica (doppio rollback = redo), `make rollback CV=<stem> SNAP=<file>`
+ripristina uno snapshot esplicito. Dettagli nel Makefile (`SNAP_KEEP=20` default).
 Poi ispeziona visivamente il PDF (`output/<stem>.pdf`) — il validatore non becca problemi di layout.
 
 ## Validazione qualitativa CV (skill `cv-quality-check`)
@@ -126,16 +137,28 @@ Il Makefile aggiunge `SANDBOX_FLAG` automaticamente. Se lanci `npx resumed expor
 ### 4. Output PDF pieno di HTML puliti
 Di default `make pdf` cancella gli HTML dopo aver generato i PDF. Per ispezionare il rendering intermedio, usa `KEEP_HTML=1 make pdf CV=<stem>` o `make debug`.
 
-### 5. `resumed` upstream è inattivo
-`rbardini/resumed` non rilascia da 10 mesi (v6.1.0 = ultima release). Per swappare a un fork:
+### 5. `resumed` upstream è di nuovo attivo (7.0.0, 2026-09)
+`rbardini/resumed` era fermo dal 2025-09 (v6.1.0, quella installata qui), ma la
+v7.0.0 (2026-09-04) lo ha riattivato: supporto Puppeteer 25, fix dipendenze.
+**Breaking: richiede Node 24+**. Per aggiornare: `npm install resumed@7` (locale:
+Node v24 ✓) + 1 PDF di prova. Per swappare a un fork resta valido:
 ```bash
 npm install github:<user>/<resumed-fork>#main
 npm uninstall resumed
 ```
 Il Makefile continua a funzionare (usa `npx $(RESUMED)`).
+Vedi anche `doc/theme-research.md` (alternative engine/temi valutate il 2026-10-06).
 
 ### 6. `scripts/translate.cjs` ha uno `STATIC_GLOSSARY` vuoto
 È stato svuotato perché era hardcoded sul tech stack dell'utente. Per CV medici/di nicchia, i termini specifici (es. BLSD, PBLSD per Martina) non vengono protetti automaticamente — se servono, aggiungere un meccanismo per-CV glossary in `scripts/translate.cjs` (attualmente non esiste, ask se necessario).
+
+### 7. Keyword lunghe nella sezione SKILLS: serve il wrapper tema
+Il tema `jsonresume-theme-stackoverflow` v3.3.0 rende le keyword come chip
+`white-space: nowrap`; in stampa un chip più largo di 1/3 di pagina sborda e si
+sovrappone alla colonna adiacente. Per questo `THEME` di default punta al wrapper
+locale `themes/stackoverflow-fix.js` che riabilita il wrapping in `@media print`.
+Non tornare a `THEME=jsonresume-theme-stackoverflow` con keyword lunghe, e non
+patchare `node_modules`. Analisi completa: `doc/skills-rendering.md`.
 
 ## Workflow tipico per aggiungere un nuovo CV
 

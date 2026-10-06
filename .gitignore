@@ -16,6 +16,9 @@ output/
 # CV modification changelog (local-only, contains PII-adjacent info)
 CHANGELOG.md
 
+# Local JSON snapshots (PII — versioned rollback store for gitignored data/*.json)
+.snapshots/
+
 # Backup directories (created by git-filter-repo, kept locally only)
 .git.backup.*
 .git.before-*

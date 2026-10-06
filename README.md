@@ -63,11 +63,19 @@ make debug CV=mio-nome                  # equivalente a KEEP_HTML=1 make pdf CV=
 | `data/<stem>.en.json` | Traduzione EN | ❌ (gitignored) |
 | `data/<stem>.translateme.json` | Solo campi traducibili, per traduzione manuale | ❌ (gitignored) |
 | `data/resume.example.json` | Template CV di esempio | ✅ |
-| `output/<stem>.pdf` | PDF finale IT | ❌ (gitignored) |
-| `output/<stem>.en.pdf` | PDF finale EN | ❌ (gitignored) |
+| `output/<stem>-<YYYY-MM-DD>.pdf` | PDF finale IT (data = ultima modifica JSON, come nel footer) | ❌ (gitignored) |
+| `output/<stem>.en-<YYYY-MM-DD>.pdf` | PDF finale EN | ❌ (gitignored) |
 | `output/<stem>.html` | HTML intermedio (cancellato di default) | ❌ (gitignored) |
 
 `<stem>` = qualsiasi nome file, es. `firstname-lastname`, `martina-peracchini`. Il Makefile tratta ogni `data/<stem>.json` come un CV (esclusi `*.en.json`, `*.translateme.json`, `certifications*`, `resume.example.json`).
+
+## Versionamento locale (rollback senza git)
+
+I JSON in `data/` sono gitignored (privacy), ma ogni `make pdf`/`make html`
+salva in automatico uno snapshot in `.snapshots/` (solo se il contenuto è
+cambiato; tenuti gli ultimi 20). Per annullare: `make rollback CV=<stem>`
+(doppio rollback = redo), `make snapshots CV=<stem>` per listare,
+`make rollback CV=<stem> SNAP=<file>` per uno snapshot esplicito.
 
 ## `meta` standard per tutti i CV
 
@@ -107,9 +115,15 @@ Opzionale: `meta.theme` (object) per personalizzare colori e ordine sezioni supp
 
 ## Tema
 
-Default: `jsonresume-theme-stackoverflow`. Per cambiarlo:
+Default: wrapper locale `themes/stackoverflow-fix.js` (il tema npm
+`jsonresume-theme-stackoverflow` + fix del wrapping keyword nella sezione SKILLS —
+vedi [doc/skills-rendering.md](doc/skills-rendering.md)).
+
+Per usare un tema npm diverso:
 1. `npm install jsonresume-theme-<nome>`
 2. `THEME=jsonresume-theme-<nome> make pdf CV=<stem>`
+
+Per tornare al tema npm puro: `THEME=jsonresume-theme-stackoverflow make pdf CV=<stem>`.
 
 ## Comandi Makefile
 
@@ -127,6 +141,8 @@ Default: `jsonresume-theme-stackoverflow`. Per cambiarlo:
 | `make translate-local CV=<stem>` | Traduce via LLM locale |
 | `make translate-all` / `make translate-all-local` | Traduce tutti |
 | `make debug` | Come `build` ma mantiene HTML (KEEP_HTML=1) |
+| `make snapshots CV=<stem>` | Lista gli snapshot del JSON (storico locale) |
+| `make rollback CV=<stem> [SNAP=<file>]` | Annulla ultima modifica (doppio = redo) o ripristina snapshot |
 | `make clean` | Rimuove `output/*.{html,pdf}` |
 | `make clean-all` | `clean` + `data/*.{en,translateme}.json` + `node_modules` |
 | `make help` | Mostra l'aiuto completo |
@@ -136,13 +152,15 @@ Default: `jsonresume-theme-stackoverflow`. Per cambiarlo:
 | Variabile | Default | Descrizione |
 |---|---|---|
 | `CV` | primo CV scoperto | Stem del CV (no `.json`); usato dai target singoli |
-| `THEME` | `jsonresume-theme-stackoverflow` | Tema npm |
+| `THEME` | `themes/stackoverflow-fix.js` (wrapper locale) | Tema: path wrapper o nome npm |
+| `CV_PLACE` | `Firenze` | Luogo del footer "Luogo, data ultima modifica JSON" |
 | `RESUMED` | `resumed` | Package `resumed` da usare (vedi sotto per fork) |
 | `KEEP_HTML` | `0` | Se `1`, mantiene HTML intermedi |
 
-### Usare un fork di `resumed`
+### Usare un fork di `resumed` o aggiornare versione
 
-Il `resumed` upstream (`rbardini/resumed`) è fermo da mesi. Per swappare a un fork:
+L'upstream (`rbardini/resumed`) è di nuovo attivo dalla v7.0.0 (2026-09, richiede Node 24+).
+Per aggiornare: `npm install resumed@7` + 1 PDF di prova. Per swappare a un fork:
 
 ```bash
 npm install github:<user>/<resumed-fork>#main
@@ -160,9 +178,12 @@ draiver-resume-cli/
 │   ├── firstname-lastname.en.json         # traduzione EN (gitignored)
 │   └── martina-peracchini.json    # CV Martina (gitignored)
 ├── output/                        # PDF/HTML generati (gitignored)
+├── .snapshots/                    # storico JSON per rollback (gitignored)
+├── themes/
+│   └── stackoverflow-fix.js       # wrapper tema: fix wrapping keyword SKILLS
 ├── scripts/
 │   └── translate.cjs              # Traduzione IT→EN multi-CV
-├── doc/                           # Documentazione
+├── doc/                           # Documentazione (`skills-rendering.md`, `theme-research.md`, …)
 ├── openspec/                      # Specifiche OpenSpec
 ├── Makefile                       # Orchestratore multi-CV
 ├── package.json
